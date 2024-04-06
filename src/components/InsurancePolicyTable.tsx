@@ -1,57 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { InsurancePolicy } from '../types/InsurancePolicy';
+import React, { useState } from "react";
+import { InsurancePolicy } from "../types/InsurancePolicy";
+import InsurancePolicyForm from "./InsurancePolicyForm";
+import UpdateInsurancePolicyForm from "./UpdateInsurancePolicyForm";
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
 
+type PolicyTableProps = {
+  policies: InsurancePolicy[];
+  onPolicyAdded: () => void;
+};
 
+const InsurancePolicyTable: React.FC<PolicyTableProps> = ({
+  policies,
+  onPolicyAdded,
+}) => {
+  const [addPolicy, setAddPolicy] = useState<boolean>(false);
+  const [updatePolicyId, setUpdatePolicyId] = useState<number>(0);
+  const [openUpdatePolicyForm, setOpenUpdatePolicyForm] = useState<boolean>(false);
 
-const InsurancePolicyTable: React.FC = () => {
-  const [policies, setPolicies] = useState<InsurancePolicy[]>([]);
-
-  useEffect(() => {
-
-    const fetchData = async () => {
-        try {
-          const response = await fetch('http://localhost:8080/api/insurance-policy');
-          if (response.ok) {
-            const result = await response.json();
-            setPolicies(result);
-          } else {
-            throw new Error('Data could not be fetched');
-          }
-        } catch (error) {
-          console.error('Fetch error:', error);
-        }
-      };
-  
-      fetchData();
-  }, []);
+  const toggleAddPolicy = () => setAddPolicy(!addPolicy);
+  const toggleUpdatePolicyForm = () => setOpenUpdatePolicyForm(!openUpdatePolicyForm);
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Policy ID</th>
-          <th>Policy Name</th>
-          <th>Status</th>
-          <th>Coverage Start Date</th>
-          <th>Coverage End Date</th>
-          <th>Created At</th>
-          <th>Updated At</th>
-        </tr>
-      </thead>
-      <tbody>
-        {policies.map(policy => (
-          <tr key={policy.policyId}>
-            <td>{policy.policyId}</td>
-            <td>{policy.policyName}</td>
-            <td>{policy.policyStatus}</td>
-            <td>{policy.coverageStartDate}</td>
-            <td>{policy.coverageEndDate}</td>
-            <td>{policy.createdAt}</td>
-            <td>{policy.updatedAt}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Policy ID</TableCell>
+              <TableCell>Policy Name</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Coverage Start Date</TableCell>
+              <TableCell>Coverage End Date</TableCell>
+              <TableCell>Created At</TableCell>
+              <TableCell>Updated At</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {policies.map((policy) => (
+              <TableRow
+                key={policy.policyId}
+                hover
+                onClick={() => {
+                  setUpdatePolicyId(policy.policyId);
+                  setOpenUpdatePolicyForm(true);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <TableCell>{policy.policyId}</TableCell>
+                <TableCell>{policy.policyName}</TableCell>
+                <TableCell>{policy.policyStatus}</TableCell>
+                <TableCell>{policy.coverageStartDate}</TableCell>
+                <TableCell>{policy.coverageEndDate}</TableCell>
+                <TableCell>{policy.createdAt}</TableCell>
+                <TableCell>{policy.updatedAt}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {
+        !addPolicy && <Button
+        variant="contained"
+        color="primary"
+        style={{ marginTop: 16 }}
+        onClick={toggleAddPolicy}
+      >
+        Add Policy
+      </Button>
+      }
+      
+
+      {addPolicy && <InsurancePolicyForm onPolicyAdded={onPolicyAdded} toggleAddPolicy={toggleAddPolicy} />}
+
+      {openUpdatePolicyForm && (
+        <UpdateInsurancePolicyForm
+          onPolicyAdded={onPolicyAdded}
+          updatePolicy={policies.find(
+            (policy) => policy.policyId === updatePolicyId
+          )}
+          setOpenUpdatePolicyForm={toggleUpdatePolicyForm}
+        />
+      )}
+    </div>
   );
 };
 
